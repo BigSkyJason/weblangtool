@@ -1,0 +1,54 @@
+html, body {
+    background-color: white;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+#header {
+    position: relative;
+    float: left;
+    width: 100%;
+    background-color: burlywood;
+    min-height: 20px;
+}
+#search {
+    margin:4px;
+    position: relative;
+    float: right;
+    width: 260px;
+    padding: 5px;
+    outline: none;
+    border: 2px solid #999999;
+    border-radius: 8px;
+    font-size: 16px;
+}
+#main {
+    position: relative;
+    float: left;
+    margin: 8px; 
+    overflow-y: scroll;
+    height: 100%;
+    width: 100%;
+}
+#mainloop {
+    position: relative;
+    float: left;
+    margin: 8px;
+
+}
+#generation-holder {
+    position:relative;
+    float: left;
+    margin: 8px;
+}
+#show-generation {
+    position: relative;
+    float: left;
+    font-weight: bold;
+    margin: 8px;
+}
+.lang-wrapper {
+    display: grid;
+    grid-auto-columns: auto;
+}

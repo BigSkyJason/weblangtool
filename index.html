@@ -1,0 +1,142 @@
+<html>
+
+<head>
+	<link rel="stylesheet" href="./index.css" />
+	<link rel="stylesheet" href="./modal/modal.css" />
+	<link rel="stylesheet" href="./language/language.css" />
+
+	<script src='./modal/modal.js' type='text/javascript'></script>
+
+	<script src='./language/language.js' type='text/javascript'></script>
+	
+	<script src='./language/language.ui.js' type='text/javascript'></script>
+
+</head>
+
+     
+<body>
+	<div id='header'>
+		<button id='mainloop' onclick="mainLoop()">Run Loop</button>
+		<div id='generation-holder'>
+			Generation:&nbsp;
+		</div>
+		<div id='show-generation'>0</div>
+		<input id='search' type="search" results>
+	</div>
+	<div id='main'></div>
+	<script type='text/javascript'>
+		let languageArray = [];
+		let id = 0;
+		let currentGeneration = 0;
+		const GENERATTION = 30; // in years
+		const LANG_DIVIDE = 20; // generations before a language becomes incomprehensible
+		const MAX_ACTIVE_LANG = 6; // most active languages we want at the same time
+		// Dom references
+		const body = document.getElementsByTagName("BODY")[0];
+		const generation = document.getElementById("show-generation");
+		const main = document.getElementById('main');
+
+		const config = {
+			holder: body
+		};
+		const modalService = new modal.ModalService(config);
+		function showModal(val, elem) {
+			modalService.show(val,elem);
+		}
+
+		let rootLanguage = language.generate({id:id++});
+		languageArray.push([rootLanguage]);
+
+		function mainLoop() {
+			currentGeneration++;
+			let thisCol = languageArray.length - 1;
+			if (!(currentGeneration % LANG_DIVIDE)) {
+				// we hit a boundary so divide all languages
+				let newArray = [];
+				let thisArray = languageArray[thisCol];
+				for (let i = 0, iLen = thisArray.length; i < iLen; i++) {
+					let thisLang = thisArray[i];
+					if (!(thisLang.isAlive)) {
+						continue;
+					}
+					thisLang.isAlive = false;
+					let newLanguage;
+					newLanguage = language.generate({id:id++,parent:thisLang.id});
+					newArray.push(newLanguage);
+					newLanguage = language.generate({id:id++,parent:thisLang.id});
+					newArray.push(newLanguage);
+				}
+				languageArray.push(newArray);
+				let currentArray = languageArray[languageArray.length-1];
+				let currentLen = currentArray.length;
+				let langsToDie = currentLen - MAX_ACTIVE_LANG;
+				for (let i = 0, iLen = langsToDie; i < iLen; i++) {
+					let randIndex = Math.floor(Math.random() * currentArray.length);
+					console.log('index to die',randIndex);
+					languageArray[languageArray.length-1].splice(randIndex,1);
+					currentLen--; // we spliced it out, easier than re-calculating
+				}
+				thisCol++;
+			}
+			let thisArray = languageArray[thisCol];
+			for (let i = 0, iLen = thisArray.length; i < iLen; i++) {
+				let thisLang = thisArray[i];
+				if (thisLang.isAlive) {
+					language.evolve(thisLang);
+				}
+			}
+			// 500-1000 years marks a point of divergence when sister languages become new branches
+			// test if ready to split.
+			// if split, see if we are already at our lang count, if so, make a language inactive.
+			draw();
+			updateGeneration();
+		}
+		function updateGeneration() {
+			let displayString = currentGeneration+ ' ('+currentGeneration*GENERATTION+'yrs)';
+			generation.innerHTML = displayString;
+		}
+		function draw() {
+			main.innerHTML = "";
+			let holder = document.createElement('div');
+			holder.className = 'lang-wrapper';
+			const testText = "Test text here";
+			for (let i = 0, iLen = languageArray.length; i < iLen; i++) {
+				let thisArray = languageArray[i];
+				for (let j = 0, jLen = thisArray.length; j < jLen; j++) {
+					let thisLang = thisArray[j];
+					let thisText = language.translate(testText);
+					let thisElement = (function() { return language_ui.buildDisplay(thisLang,thisText);})();
+					let row = (j+1)+"/"+(j+1);
+					let col = (i+1)+"/"+(i+1);
+					thisElement.style.gridRow = row;
+					thisElement.style.gridColumn = col;
+
+					if (!(thisLang.isAlive)) {
+						thisElement.style.borderColor = 'black';
+						thisElement.style.backgroundColor = 'gray';
+					}
+
+					holder.appendChild(thisElement);
+				}
+			}
+			main.appendChild(holder);
+		}
+		search.addEventListener("blur", function() {
+			let current = this.value;
+			this.value = "";
+			console.log('blur',current);
+			let result = document.createElement('div');
+			let thisArray = languageArray[languageArray.length-1];
+			for (let i = 0, iLen = thisArray.length; i < iLen; i++) {
+				let thisLang = thisArray[i];
+				if (thisLang.isAlive) {
+					let entry = language.translate(current);
+					result.innerHTML += entry + '<br/>';
+				}
+			}
+			showModal(current,result);
+		});
+	</script>
+</body>
+
+</html>
